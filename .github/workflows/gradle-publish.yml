@@ -1,0 +1,42 @@
+name: Gradle Package for Minecraft 1.21.1
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # 设置 JDK 17 (Minecraft 1.21.1 要求 Java 17)
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    # 设置 Gradle 环境
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # 固定版本 SHA
+
+    # 下载并验证 Minecraft Forge 的依赖
+    - name: Validate Forge Environment
+      run: ./gradlew dependencies
+
+    # 使用 Gradle 编译 Mod
+    - name: Build the Mod
+      run: ./gradlew build
+
+    # 发布 Mod 到 GitHub Packages
+    - name: Publish Mod to GitHub Packages
+      run: ./gradlew publish
+      env:
+        USERNAME: ${{ github.actor }}
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
